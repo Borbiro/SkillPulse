@@ -24,8 +24,9 @@ async function loadSubjects() {
 }
 
 async function loadSessions() {
-  const sessions = await api.get("/api/sessions");
   const body = document.getElementById("sessions-body");
+  if (!body) return; // a Naplo tabla csak a naplo.html oldalon van jelen
+  const sessions = await api.get("/api/sessions");
   body.innerHTML = "";
   for (const s of sessions) {
     const tr = document.createElement("tr");
@@ -142,12 +143,22 @@ menuOverlay.addEventListener("click", closeMenu);
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeMenu();
 });
-// TODO: menu-item kattintasra a megfelelo nezet megjelenitese (egyelore nincs implementalva)
+
+// A "Napló" menupont egy kulon oldalra navigal, a tobbi meg nincs implementalva (TODO)
+document.querySelectorAll(".menu-item").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.target === "log") {
+      window.location.href = "/naplo.html";
+      return;
+    }
+    closeMenu();
+  });
+});
 
 // --- Bekotesek ---
-document.getElementById("log-save").addEventListener("click", saveSession);
-document.getElementById("timer-start").addEventListener("click", startTimer);
-document.getElementById("timer-stop").addEventListener("click", stopTimer);
+document.getElementById("log-save")?.addEventListener("click", saveSession);
+document.getElementById("timer-start")?.addEventListener("click", startTimer);
+document.getElementById("timer-stop")?.addEventListener("click", stopTimer);
 
 // --- Indulas ---
 loadSubjects();

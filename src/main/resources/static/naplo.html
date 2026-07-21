@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Napló – Tanulás-követő</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <button id="menu-toggle" class="menu-btn" aria-label="Menü" aria-expanded="false" aria-controls="side-menu">
+            <span></span><span></span><span></span>
+        </button>
+        <h1><a href="/index.html">SkillPulse</a></h1>
+        <div class="stats-strip">
+            <span>Streak: <strong id="streak">–</strong> nap</span>
+            <span>Ma: <strong id="today-total">–</strong> perc</span>
+        </div>
+    </header>
+
+    <div id="menu-overlay" class="menu-overlay" hidden></div>
+    <nav id="side-menu" class="side-menu" aria-hidden="true">
+        <ul>
+            <li><button class="menu-item" data-target="log">Napló</button></li>
+            <li><button class="menu-item" data-target="timer">Időzítő</button></li>
+            <li><button class="menu-item" data-target="stats">Statisztika</button></li>
+            <li><button class="menu-item" data-target="settings">Beállítások</button></li>
+        </ul>
+    </nav>
+
+    <main class="wide">
+        <!-- Dashboard: osszes session datum szerint (nagyobb, kulon oldal) -->
+        <section class="card card-large" id="dashboard-card">
+            <h2>Napló</h2>
+            <table id="sessions-table">
+                <thead>
+                    <tr><th>Dátum</th><th>Tárgy</th><th>Perc</th><th>Megjegyzés</th><th></th></tr>
+                </thead>
+                <tbody id="sessions-body"><!-- sorok ide --></tbody>
+            </table>
+            <button id="new-entry-btn" class="new-entry-btn">Új elem rögzítése</button>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>
