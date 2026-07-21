@@ -120,41 +120,108 @@ async function saveSession() {
   }
 }
 
-// --- Idozito (kliensoldali; leallitaskor mentunk egy kesz session-t) ---
-let timerStart = null;
+// --- Idozito (kliensoldali; menteskor rogzitunk egy kesz session-t) ---
+let timerStart = null;   // a jelenleg futo szakasz kezdete (ms), vagy null ha all
+let timerElapsedMs = 0;  // a korabbi szakaszokban felhalmozott ido
 let timerInterval = null;
 
+function timerTotalMs() {
+  return timerElapsedMs + (timerStart ? Date.now() - timerStart : 0);
+}
+
+// Gombok allapota a 4 idozito-allapot szerint (a Vissza mindig aktiv)
+// idle    -> csak Inditas
+// running -> Szunet + Leallitas
+// paused  -> Inditas + Leallitas
+// stopped -> csak Mentes
+function setTimerButtons(state) {
+  const states = {
+    idle:    { start: false, pause: true,  stop: true,  save: true  },
+    running: { start: true,  pause: false, stop: false, save: true  },
+    paused:  { start: false, pause: true,  stop: false, save: true  },
+    stopped: { start: true,  pause: true,  stop: true,  save: false },
+  };
+  const s = states[state];
+  document.getElementById("timer-start").disabled = s.start;
+  document.getElementById("timer-pause").disabled = s.pause;
+  document.getElementById("timer-stop").disabled = s.stop;
+  document.getElementById("timer-save").disabled = s.save;
+}
+
+// Az orat futtato szakasz megallitasa (a felhalmozott ido megmarad)
+function haltTimer() {
+  if (!timerStart) return;
+  timerElapsedMs += Date.now() - timerStart;
+  timerStart = null;
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
 function startTimer() {
+  if (timerStart) return; // mar fut
   timerStart = Date.now();
   timerInterval = setInterval(renderTimer, 1000);
-  document.getElementById("timer-start").disabled = true;
-  document.getElementById("timer-stop").disabled = false;
+  setTimerButtons("running");
+}
+
+// Szunet: megallitja az orat, de a felhalmozott idot megtartja
+function pauseTimer() {
+  haltTimer();
+  setTimerButtons("paused");
+}
+
+// Leallitas: veglegesen megallitja az orat, csak a Mentes lesz elerheto
+function stopTimer() {
+  haltTimer();
+  setTimerButtons("stopped");
+}
+
+function resetTimer() {
+  haltTimer();
+  timerElapsedMs = 0;
+  renderTimer();
+  setTimerButtons("idle");
 }
 
 function renderTimer() {
-  const secs = Math.floor((Date.now() - timerStart) / 1000);
+  const secs = Math.floor(timerTotalMs() / 1000);
   const hh = String(Math.floor(secs / 3600)).padStart(2, "0");
   const mm = String(Math.floor((secs % 3600) / 60)).padStart(2, "0");
   const ss = String(secs % 60).padStart(2, "0");
   document.getElementById("timer-display").textContent = `${hh}:${mm}:${ss}`;
 }
 
-async function stopTimer() {
-  clearInterval(timerInterval);
-  const minutes = Math.max(1, Math.round((Date.now() - timerStart) / 60000));
+async function saveTimer() {
+  haltTimer(); // biztonsag kedveert megallitjuk az orat
+  const subjectId = Number(document.getElementById("timer-subject").value);
+  if (!subjectId) {
+    showFormMessage("Válassz tárgyat!", "error");
+    return;
+  }
+  const minutes = Math.max(1, Math.round(timerElapsedMs / 60000));
   const body = {
-    subjectId: Number(document.getElementById("timer-subject").value),
+    subjectId,
     date: null, // ma
     durationMinutes: minutes,
-    note: null,
+    note: document.getElementById("timer-note").value || null,
     source: "TIMER",
   };
-  // TODO: validacio + a display nullazasa
-  await api.post("/api/sessions", body);
-  document.getElementById("timer-start").disabled = false;
-  document.getElementById("timer-stop").disabled = true;
-  await loadSessions();
-  await loadStats();
+  try {
+    const res = await fetch("/api/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showFormMessage("Mentés sikeres!", "success");
+    resetTimer();
+    document.getElementById("timer-note").value = "";
+    await loadSessions();
+    await loadStats();
+  } catch (err) {
+    console.error("Mentes sikertelen:", err);
+    showFormMessage("A mentés nem sikerült!", "error");
+  }
 }
 
 // --- Menu ---
@@ -192,6 +259,10 @@ document.querySelectorAll(".menu-item").forEach((btn) => {
       window.location.href = "/naplo.html";
       return;
     }
+    if (btn.dataset.target === "timer") {
+      window.location.href = "/idozito.html";
+      return;
+    }
     closeMenu();
   });
 });
@@ -203,9 +274,14 @@ document.getElementById("new-entry-btn")?.addEventListener("click", () => {
 document.getElementById("log-back")?.addEventListener("click", () => {
   window.location.href = "/naplo.html";
 });
+document.getElementById("timer-back")?.addEventListener("click", () => {
+  window.location.href = "/naplo.html";
+});
 document.getElementById("log-save")?.addEventListener("click", saveSession);
 document.getElementById("timer-start")?.addEventListener("click", startTimer);
+document.getElementById("timer-pause")?.addEventListener("click", pauseTimer);
 document.getElementById("timer-stop")?.addEventListener("click", stopTimer);
+document.getElementById("timer-save")?.addEventListener("click", saveTimer);
 
 // --- Indulas ---
 loadSubjects();

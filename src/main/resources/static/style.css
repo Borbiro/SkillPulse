@@ -189,6 +189,7 @@ th { color: var(--muted); font-weight: 600; font-size: .85rem; }
 .form-grid input,
 .form-grid textarea {
   width: 100%;
+  max-width: 100%;
   margin: 0;
   padding: .6rem .7rem;
 }
@@ -225,9 +226,16 @@ th { color: var(--muted); font-weight: 600; font-size: .85rem; }
 
 .form-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: .75rem;
   margin-top: 1rem;
+}
+
+/* Idozito: kozepre igazitott, egyforma tavolsagra levo gombok */
+#timer-card .form-actions {
+  justify-content: center;
+  gap: 1rem;
 }
 
 .btn-primary,
