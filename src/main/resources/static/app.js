@@ -84,6 +84,16 @@ async function loadStats() {
   // TODO: summary + daily lekerese, chart kirajzolasa, mai osszperc
 }
 
+// --- Uzenet megjelenitese az urlapon ---
+function showFormMessage(text, type) {
+  const el = document.getElementById("form-message");
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove("error", "success");
+  el.classList.add(type);
+  el.hidden = false;
+}
+
 // --- Kezi rogzites ---
 async function saveSession() {
   const body = {
@@ -94,9 +104,20 @@ async function saveSession() {
     source: "MANUAL",
   };
   // TODO: validacio (targy kivalasztva? perc > 0?)
-  await api.post("/api/sessions", body);
-  await loadSessions();
-  await loadStats();
+  try {
+    const res = await fetch("/api/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showFormMessage("Mentés sikeres!", "success");
+    await loadSessions();
+    await loadStats();
+  } catch (err) {
+    console.error("Mentes sikertelen:", err);
+    showFormMessage("A mentés nem sikerült!", "error");
+  }
 }
 
 // --- Idozito (kliensoldali; leallitaskor mentunk egy kesz session-t) ---
