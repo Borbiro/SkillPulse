@@ -283,7 +283,21 @@ document.getElementById("timer-pause")?.addEventListener("click", pauseTimer);
 document.getElementById("timer-stop")?.addEventListener("click", stopTimer);
 document.getElementById("timer-save")?.addEventListener("click", saveTimer);
 
+// --- Veletlen idezet a kezdolapon (nagyban) ---
+async function showRandomQuote() {
+  const el = document.getElementById("quote-text");
+  if (!el) return; // csak az index.html-en letezik
+
+  try {
+    const quote = await api.get("/api/quotes/random");
+    if (quote && quote.text) el.textContent = quote.text;
+  } catch (err) {
+    console.error("Idezet betoltese sikertelen:", err);
+  }
+}
+
 // --- Indulas ---
 loadSubjects();
 loadSessions();
 loadStats();
+showRandomQuote();

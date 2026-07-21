@@ -266,3 +266,29 @@ th { color: var(--muted); font-weight: 600; font-size: .85rem; }
   .form-actions { flex-direction: column-reverse; }
   .form-actions button { width: 100%; }
 }
+
+/* --- Veletlen idezet a kezdolapon (nagyban) --- */
+.quote-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 140px);
+  padding: 2rem 1.5rem;
+}
+
+.quote-text {
+  margin: 0;
+  max-width: 900px;
+  font-size: 2.75rem;
+  line-height: 1.35;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+}
+
+.quote-text::before { content: "\201C"; }
+.quote-text::after { content: "\201D"; }
+
+@media (max-width: 480px) {
+  .quote-text { font-size: 1.75rem; }
+}
