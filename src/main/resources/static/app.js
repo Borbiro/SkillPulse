@@ -19,8 +19,28 @@ const api = {
 // --- Betoltes ---
 async function loadSubjects() {
   const subjects = await api.get("/api/subjects");
-  // TODO: feltolteni a #timer-subject es #log-subject select-eket
-  console.log("subjects", subjects);
+  const selects = [
+    document.getElementById("timer-subject"),
+    document.getElementById("log-subject"),
+  ].filter(Boolean);
+
+  for (const select of selects) {
+    select.innerHTML = "";
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Válassz tárgyat…";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    select.appendChild(placeholder);
+
+    for (const s of subjects) {
+      const option = document.createElement("option");
+      option.value = s.id;
+      option.textContent = s.name;
+      select.appendChild(option);
+    }
+  }
 }
 
 async function loadSessions() {
@@ -156,6 +176,12 @@ document.querySelectorAll(".menu-item").forEach((btn) => {
 });
 
 // --- Bekotesek ---
+document.getElementById("new-entry-btn")?.addEventListener("click", () => {
+  window.location.href = "/uj-elem.html";
+});
+document.getElementById("log-back")?.addEventListener("click", () => {
+  window.location.href = "/naplo.html";
+});
 document.getElementById("log-save")?.addEventListener("click", saveSession);
 document.getElementById("timer-start")?.addEventListener("click", startTimer);
 document.getElementById("timer-stop")?.addEventListener("click", stopTimer);

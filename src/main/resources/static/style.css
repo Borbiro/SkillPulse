@@ -161,3 +161,80 @@ th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--
 th { color: var(--muted); font-weight: 600; font-size: .85rem; }
 
 .muted { color: var(--muted); }
+
+/* --- Urlap oldal (Uj elem rogzitese) --- */
+.form-card {
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2.5rem 2.75rem;
+}
+
+.form-card h2 {
+  font-size: 1.35rem;
+  margin-bottom: 2rem;
+}
+
+.form-grid { display: grid; gap: 1.5rem; }
+
+.field { display: grid; gap: .5rem; }
+
+.field-label {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.form-grid select,
+.form-grid input,
+.form-grid textarea {
+  width: 100%;
+  margin: 0;
+  padding: .6rem .7rem;
+}
+
+.form-grid select:focus,
+.form-grid input:focus,
+.form-grid textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 235, .15);
+}
+
+.form-grid textarea { min-height: 8rem; }
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: .6rem 1.4rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover { background: #275ec9; border-color: #275ec9; }
+
+.btn-secondary {
+  background: #fff;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn-secondary:hover { background: var(--bg); }
+
+@media (max-width: 480px) {
+  .form-card { padding: 1.75rem 1.5rem; }
+  .form-actions { flex-direction: column-reverse; }
+  .form-actions button { width: 100%; }
+}
