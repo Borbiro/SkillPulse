@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tanulás-követő</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <h1>Tanulás-követő</h1>
+        <div class="stats-strip">
+            <span>Streak: <strong id="streak">–</strong> nap</span>
+            <span>Ma: <strong id="today-total">–</strong> perc</span>
+        </div>
+    </header>
+
+    <main>
+        <!-- Idozito -->
+        <section class="card" id="timer-card">
+            <h2>Időzítő</h2>
+            <div class="timer-display" id="timer-display">00:00:00</div>
+            <div class="row">
+                <select id="timer-subject"><!-- targyak ide --></select>
+                <button id="timer-start">Start</button>
+                <button id="timer-stop" disabled>Stop &amp; mentés</button>
+            </div>
+        </section>
+
+        <!-- Kezi rogzites -->
+        <section class="card" id="log-card">
+            <h2>Session rögzítése</h2>
+            <div class="row">
+                <select id="log-subject"><!-- targyak ide --></select>
+                <input type="date" id="log-date">
+                <input type="number" id="log-duration" min="1" placeholder="perc">
+            </div>
+            <textarea id="log-note" placeholder="Megjegyzés (opcionális)"></textarea>
+            <button id="log-save">Mentés</button>
+        </section>
+
+        <!-- Dashboard: osszes session datum szerint -->
+        <section class="card" id="dashboard-card">
+            <h2>Napló</h2>
+            <table id="sessions-table">
+                <thead>
+                    <tr><th>Dátum</th><th>Tárgy</th><th>Perc</th><th>Megjegyzés</th><th></th></tr>
+                </thead>
+                <tbody id="sessions-body"><!-- sorok ide --></tbody>
+            </table>
+        </section>
+
+        <!-- Statisztika -->
+        <section class="card" id="stats-card">
+            <h2>Statisztika</h2>
+            <p class="muted">TODO: tárgyankénti bontás és napi idővonal (pl. Chart.js CDN-ről).</p>
+            <canvas id="stats-chart"></canvas>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>
