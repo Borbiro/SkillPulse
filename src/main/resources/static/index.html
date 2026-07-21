@@ -8,12 +8,25 @@
 </head>
 <body>
     <header class="topbar">
-        <h1>Tanulás-követő</h1>
+        <button id="menu-toggle" class="menu-btn" aria-label="Menü" aria-expanded="false" aria-controls="side-menu">
+            <span></span><span></span><span></span>
+        </button>
+        <h1>SkillPulse</h1>
         <div class="stats-strip">
             <span>Streak: <strong id="streak">–</strong> nap</span>
             <span>Ma: <strong id="today-total">–</strong> perc</span>
         </div>
     </header>
+
+    <div id="menu-overlay" class="menu-overlay" hidden></div>
+    <nav id="side-menu" class="side-menu" aria-hidden="true">
+        <ul>
+            <li><button class="menu-item" data-target="log">Napló</button></li>
+            <li><button class="menu-item" data-target="timer">Időzítő</button></li>
+            <li><button class="menu-item" data-target="stats">Statisztika</button></li>
+            <li><button class="menu-item" data-target="settings">Beállítások</button></li>
+        </ul>
+    </nav>
 
     <main>
         <!-- Idozito -->

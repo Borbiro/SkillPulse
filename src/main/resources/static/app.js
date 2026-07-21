@@ -115,6 +115,35 @@ async function stopTimer() {
   await loadStats();
 }
 
+// --- Menu ---
+const menuToggle = document.getElementById("menu-toggle");
+const sideMenu = document.getElementById("side-menu");
+const menuOverlay = document.getElementById("menu-overlay");
+
+function openMenu() {
+  sideMenu.classList.add("open");
+  sideMenu.setAttribute("aria-hidden", "false");
+  menuToggle.setAttribute("aria-expanded", "true");
+  menuOverlay.hidden = false;
+}
+
+function closeMenu() {
+  sideMenu.classList.remove("open");
+  sideMenu.setAttribute("aria-hidden", "true");
+  menuToggle.setAttribute("aria-expanded", "false");
+  menuOverlay.hidden = true;
+}
+
+menuToggle.addEventListener("click", () => {
+  if (sideMenu.classList.contains("open")) closeMenu();
+  else openMenu();
+});
+menuOverlay.addEventListener("click", closeMenu);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeMenu();
+});
+// TODO: menu-item kattintasra a megfelelo nezet megjelenitese (egyelore nincs implementalva)
+
 // --- Bekotesek ---
 document.getElementById("log-save").addEventListener("click", saveSession);
 document.getElementById("timer-start").addEventListener("click", startTimer);
