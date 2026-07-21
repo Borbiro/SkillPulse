@@ -25,8 +25,36 @@ async function loadSubjects() {
 
 async function loadSessions() {
   const sessions = await api.get("/api/sessions");
-  // TODO: kirajzolni a #sessions-body sorait (datum szerint mar rendezve jon)
-  console.log("sessions", sessions);
+  const body = document.getElementById("sessions-body");
+  body.innerHTML = "";
+  for (const s of sessions) {
+    const tr = document.createElement("tr");
+
+    const noteShort = s.note && s.note.length > 60 ? s.note.slice(0, 60) + "…" : (s.note ?? "");
+
+    const del = document.createElement("button");
+    del.textContent = "Törlés";
+    del.addEventListener("click", async () => {
+      await api.del(`/api/sessions/${s.id}`);
+      await loadSessions();
+      await loadStats();
+    });
+
+    const actionsTd = document.createElement("td");
+    actionsTd.appendChild(del);
+
+    const dateTd = document.createElement("td");
+    dateTd.textContent = s.date;
+    const subjectTd = document.createElement("td");
+    subjectTd.textContent = s.subject?.name ?? "";
+    const durationTd = document.createElement("td");
+    durationTd.textContent = s.durationMinutes;
+    const noteTd = document.createElement("td");
+    noteTd.textContent = noteShort;
+
+    tr.append(dateTd, subjectTd, durationTd, noteTd, actionsTd);
+    body.appendChild(tr);
+  }
 }
 
 async function loadStats() {
