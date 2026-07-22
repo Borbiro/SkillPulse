@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kódtár elem – Tanulás-követő</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <button id="menu-toggle" class="menu-btn" aria-label="Menü" aria-expanded="false" aria-controls="side-menu">
+            <span></span><span></span><span></span>
+        </button>
+        <h1><a href="/index.html">SkillPulse</a></h1>
+        <div class="stats-strip">
+            <span>Streak: <strong id="streak">–</strong> nap</span>
+            <span>Ma: <strong id="today-total">–</strong> perc</span>
+        </div>
+    </header>
+
+    <div id="menu-mount"><!-- a menu.html ide toltodik --></div>
+    <div id="modal-mount"><!-- az uj-tantargy-modal.html ide toltodik --></div>
+    <div id="confirm-mount"><!-- a megerosites-modal.html ide toltodik --></div>
+
+    <main class="wide">
+        <section class="card card-large" id="kodtar-elem-card">
+            <h2 id="kodtar-elem-title">Kódtár elem</h2>
+
+            <table id="kodtar-elem-table">
+                <thead>
+                    <tr>
+                        <th class="select-col"></th>
+                        <th>Név</th>
+                        <th>Állapot</th>
+                    </tr>
+                </thead>
+                <tbody id="kodtar-elem-body"><!-- a sorok az app.js-bol toltodnek --></tbody>
+            </table>
+
+            <!-- Funkciok legalul; egyelore csak a felulet, muveletek nelkul. -->
+            <div class="form-actions kodtar-elem-actions">
+                <button type="button" id="kodtar-elem-back" class="btn-secondary">Vissza</button>
+                <button type="button" id="kodtar-add-btn" class="btn-primary">Új hozzáadása</button>
+                <button type="button" id="kodtar-edit-btn" class="btn-secondary">Módosítás</button>
+                <button type="button" id="kodtar-deactivate-btn" class="btn-secondary">Deaktiválás</button>
+                <button type="button" id="kodtar-activate-btn" class="btn-secondary">Aktiválás</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>

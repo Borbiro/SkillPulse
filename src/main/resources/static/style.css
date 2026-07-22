@@ -131,6 +131,10 @@ main.wide .card-large td { padding: .7rem .9rem; }
 
 .new-entry-btn { margin-top: 1.25rem; }
 
+/* Kodtar elem: kivalaszto oszlop + also funkciogombok */
+.select-col { width: 2.5rem; text-align: center; }
+.kodtar-elem-actions { justify-content: flex-start; margin-top: 1.5rem; }
+
 .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
 
 input, select, textarea, button {
@@ -266,6 +270,50 @@ th { color: var(--muted); font-weight: 600; font-size: .85rem; }
   .form-actions { flex-direction: column-reverse; }
   .form-actions button { width: 100%; }
 }
+
+/* --- Modal (kozepre igazitott felugro ablak, pl. uj tantargy) --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, .45);
+}
+
+.modal-overlay[hidden] { display: none; }
+
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem 1.75rem 1.5rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
+}
+
+.modal-card h2 { font-size: 1.25rem; margin: 0 0 1.25rem; }
+
+.modal-card .field { margin-bottom: 1rem; }
+
+.modal-card input {
+  width: 100%;
+  padding: .6rem .7rem;
+}
+
+.modal-card input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 235, .15);
+}
+
+.modal-card .form-message { margin-bottom: 1rem; }
+.modal-card .form-actions { margin-top: 0; }
+
+.confirm-text { margin: 0 0 1.5rem; line-height: 1.5; }
 
 /* --- Veletlen idezet a kezdolapon (nagyban) --- */
 .quote-main {

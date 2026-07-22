@@ -104,6 +104,58 @@ async function loadKodtarak() {
   }
 }
 
+// Az eppen megnyitott kodtar (a kodtar-elem.html oldalon), a gombok innen tudjak,
+// melyik torzstablat kell modositani.
+let currentKodtar = null;
+
+/**
+ * Kodtar elem oldal: az adott kodtar rekordjait tolti be.
+ * A "Tantárgyak" kodtar a subjects tablaval van osszekotve, igy annak
+ * adatait jelenitjuk meg (Nev + Allapot: Aktiv / Inaktiv az archived alapjan).
+ */
+async function loadKodtarElem() {
+  const body = document.getElementById("kodtar-elem-body");
+  if (!body) return; // csak a kodtar-elem.html oldalon van jelen
+
+  const id = new URLSearchParams(window.location.search).get("id");
+  const titleEl = document.getElementById("kodtar-elem-title");
+
+  // A kodtar nevet a listabol keressuk ki (nincs kulon GET /{id} vegpont).
+  const kodtarak = await api.get("/api/kodtarak");
+  const kodtar = kodtarak.find(k => String(k.id) === String(id));
+  currentKodtar = kodtar ?? null;
+  if (titleEl && kodtar) titleEl.textContent = kodtar.name;
+
+  body.innerHTML = "";
+
+  // Egyelore csak a "Tantárgyak" kodtarhoz tartozik adatforras (subjects tabla).
+  if (kodtar && kodtar.name === "Tantárgyak") {
+    const subjects = await api.get("/api/subjects?includeArchived=true");
+    for (const s of subjects) {
+      const tr = document.createElement("tr");
+
+      const selectTd = document.createElement("td");
+      selectTd.className = "select-col";
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "kodtar-rekord";
+      radio.value = s.id;
+      radio.setAttribute("aria-label", "Rekord kivalasztasa");
+      selectTd.appendChild(radio);
+
+      const nameTd = document.createElement("td");
+      nameTd.textContent = s.name;
+
+      const statusTd = document.createElement("td");
+      statusTd.textContent = s.archived ? "Inaktív" : "Aktív";
+      if (s.archived) statusTd.className = "muted";
+
+      tr.append(selectTd, nameTd, statusTd);
+      body.appendChild(tr);
+    }
+  }
+}
+
 async function loadStats() {
   const streak = await api.get("/api/stats/streak");
   document.getElementById("streak").textContent = streak.current ?? "–";
@@ -250,6 +302,149 @@ async function saveTimer() {
   }
 }
 
+// --- Uj tantargy modal (kulon uj-tantargy-modal.html fragmentbol) ---
+async function loadSubjectModal() {
+  const mount = document.getElementById("modal-mount");
+  if (!mount) return; // csak a kodtar-elem.html oldalon van jelen
+  const html = await fetch("/uj-tantargy-modal.html").then(r => r.text());
+  mount.innerHTML = html;
+  initSubjectModal();
+}
+
+function initSubjectModal() {
+  const overlay = document.getElementById("modal-overlay");
+  if (!overlay) return;
+
+  document.getElementById("modal-cancel")?.addEventListener("click", closeSubjectModal);
+  document.getElementById("modal-save")?.addEventListener("click", submitSubjectModal);
+
+  // Hatterre kattintva bezar; a kartyan belulre kattintva nem.
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeSubjectModal();
+  });
+  // Enter a mezoben = mentes, Escape = bezaras.
+  document.getElementById("modal-subject-name")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submitSubjectModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) closeSubjectModal();
+  });
+}
+
+// A modal aktualis allapota: "add" = uj tantargy, "edit" = meglevo modositasa.
+let subjectModalMode = "add";
+let subjectModalId = null;
+
+/**
+ * A kozos modal megnyitasa. Parameterek nelkul "add" (uj tantargy) modban nyit;
+ * { mode: "edit", id, name } eseten a meglevo tantargyat toltodik be szerkesztesre.
+ */
+function openSubjectModal(opts = {}) {
+  const overlay = document.getElementById("modal-overlay");
+  if (!overlay) return;
+  const input = document.getElementById("modal-subject-name");
+  const msg = document.getElementById("modal-message");
+  const title = document.getElementById("modal-title");
+  const saveBtn = document.getElementById("modal-save");
+
+  subjectModalMode = opts.mode === "edit" ? "edit" : "add";
+  subjectModalId = subjectModalMode === "edit" ? opts.id : null;
+
+  if (title) title.textContent = subjectModalMode === "edit" ? "Tantárgy módosítása" : "Új tantárgy";
+  if (saveBtn) saveBtn.textContent = subjectModalMode === "edit" ? "Mentés" : "Hozzáadás";
+  if (input) input.value = opts.name ?? "";
+  if (msg) msg.hidden = true;
+
+  overlay.hidden = false;
+  input?.focus();
+  input?.select();
+}
+
+function closeSubjectModal() {
+  const overlay = document.getElementById("modal-overlay");
+  if (overlay) overlay.hidden = true;
+}
+
+async function submitSubjectModal() {
+  const input = document.getElementById("modal-subject-name");
+  const msg = document.getElementById("modal-message");
+  const name = (input?.value ?? "").trim();
+  if (!name) {
+    if (msg) { msg.textContent = "Adj meg egy nevet!"; msg.hidden = false; }
+    input?.focus();
+    return;
+  }
+
+  // Uj felvetel (POST) vagy meglevo modositasa (PUT) a mod alapjan.
+  const res = subjectModalMode === "edit"
+    ? await api.put(`/api/subjects/${subjectModalId}`, { name })
+    : await api.post("/api/subjects", { name });
+
+  if (res && res.id) {
+    closeSubjectModal();
+    await loadKodtarElem(); // tabla frissitese
+  } else if (msg) {
+    msg.textContent = subjectModalMode === "edit"
+      ? "A módosítás nem sikerült (talán már létezik ilyen név)."
+      : "A tantárgy létrehozása nem sikerült (talán már létezik ilyen név).";
+    msg.hidden = false;
+  }
+}
+
+// --- Megerosito modal (kulon megerosites-modal.html fragmentbol) ---
+let confirmResolve = null; // az eppen nyitott megerosites Promise-anak feloldoja
+
+async function loadConfirmModal() {
+  const mount = document.getElementById("confirm-mount");
+  if (!mount) return; // csak a kodtar-elem.html oldalon van jelen
+  const html = await fetch("/megerosites-modal.html").then(r => r.text());
+  mount.innerHTML = html;
+  initConfirmModal();
+}
+
+function initConfirmModal() {
+  const overlay = document.getElementById("confirm-overlay");
+  if (!overlay) return;
+
+  document.getElementById("confirm-cancel")?.addEventListener("click", () => settleConfirm(false));
+  document.getElementById("confirm-ok")?.addEventListener("click", () => settleConfirm(true));
+
+  // Hatterre kattintva = Megse; a kartyan belulre kattintva nem.
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) settleConfirm(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!overlay.hidden && e.key === "Escape") settleConfirm(false);
+  });
+}
+
+/**
+ * Megerosito modal megnyitasa. Promise-t ad vissza: true = megerositve, false = megse.
+ * opts: { message, okLabel }
+ */
+function confirmModal(opts = {}) {
+  const overlay = document.getElementById("confirm-overlay");
+  const msg = document.getElementById("confirm-message");
+  const okBtn = document.getElementById("confirm-ok");
+  if (!overlay) return Promise.resolve(false);
+
+  if (msg) msg.textContent = opts.message ?? "Biztosan folytatod?";
+  if (okBtn) okBtn.textContent = opts.okLabel ?? "Igen";
+
+  overlay.hidden = false;
+  okBtn?.focus();
+  return new Promise((resolve) => { confirmResolve = resolve; });
+}
+
+function settleConfirm(result) {
+  const overlay = document.getElementById("confirm-overlay");
+  if (overlay) overlay.hidden = true;
+  if (confirmResolve) {
+    confirmResolve(result);
+    confirmResolve = null;
+  }
+}
+
 // --- Menu (kozos menu.html fragmentbol toltve minden oldalon) ---
 async function loadMenu() {
   const mount = document.getElementById("menu-mount");
@@ -315,9 +510,104 @@ document.getElementById("new-entry-btn")?.addEventListener("click", () => {
 document.getElementById("log-back")?.addEventListener("click", () => {
   window.location.href = "/naplo.html";
 });
+document.getElementById("kodtar-elem-back")?.addEventListener("click", () => {
+  window.location.href = "/kodtar.html";
+});
 document.getElementById("timer-back")?.addEventListener("click", () => {
   window.location.href = "/naplo.html";
 });
+// Kodtar elem: uj rekord hozzaadasa a kozeppontban felugro modallal.
+// Egyelore csak a "Tantárgyak" kodtar van osszekotve (subjects tabla).
+document.getElementById("kodtar-add-btn")?.addEventListener("click", () => {
+  if (!currentKodtar || currentKodtar.name !== "Tantárgyak") {
+    alert("Ehhez a kódtárhoz még nincs bekötve adatforrás.");
+    return;
+  }
+  openSubjectModal();
+});
+
+// Kodtar elem: kivalasztott rekord modositasa ugyanabban a modalban (edit mod).
+document.getElementById("kodtar-edit-btn")?.addEventListener("click", () => {
+  if (!currentKodtar || currentKodtar.name !== "Tantárgyak") {
+    alert("Ehhez a kódtárhoz még nincs bekötve adatforrás.");
+    return;
+  }
+  const selected = document.querySelector('input[name="kodtar-rekord"]:checked');
+  if (!selected) {
+    alert("Előbb válassz ki egy rekordot a módosításhoz.");
+    return;
+  }
+  // A kivalasztott sor nev-cellaja (2. cella: kivalaszto, nev, allapot).
+  const name = selected.closest("tr")?.children[1]?.textContent ?? "";
+  openSubjectModal({ mode: "edit", id: selected.value, name });
+});
+
+// Kodtar elem: kivalasztott rekord deaktivalasa (archived = true).
+document.getElementById("kodtar-deactivate-btn")?.addEventListener("click", async () => {
+  if (!currentKodtar || currentKodtar.name !== "Tantárgyak") {
+    alert("Ehhez a kódtárhoz még nincs bekötve adatforrás.");
+    return;
+  }
+  const selected = document.querySelector('input[name="kodtar-rekord"]:checked');
+  if (!selected) {
+    alert("Előbb válassz ki egy rekordot a deaktiváláshoz.");
+    return;
+  }
+  const row = selected.closest("tr");
+  const name = row?.children[1]?.textContent ?? "";
+  const status = row?.children[2]?.textContent ?? "";
+  if (status === "Inaktív") {
+    alert("Ez a tantárgy már inaktív.");
+    return;
+  }
+  const ok = await confirmModal({
+    message: `Biztosan deaktiválod a(z) „${name}" tantárgyat?`,
+    okLabel: "Deaktiválás",
+  });
+  if (!ok) return;
+
+  // A nevet is elkuldjuk, mert a PUT feltetel nelkul felulirja azt.
+  const res = await api.put(`/api/subjects/${selected.value}`, { name, archived: true });
+  if (res && res.id) {
+    await loadKodtarElem(); // tabla frissitese
+  } else {
+    alert("A deaktiválás nem sikerült.");
+  }
+});
+
+// Kodtar elem: kivalasztott rekord aktivalasa (archived = false).
+document.getElementById("kodtar-activate-btn")?.addEventListener("click", async () => {
+  if (!currentKodtar || currentKodtar.name !== "Tantárgyak") {
+    alert("Ehhez a kódtárhoz még nincs bekötve adatforrás.");
+    return;
+  }
+  const selected = document.querySelector('input[name="kodtar-rekord"]:checked');
+  if (!selected) {
+    alert("Előbb válassz ki egy rekordot az aktiváláshoz.");
+    return;
+  }
+  const row = selected.closest("tr");
+  const name = row?.children[1]?.textContent ?? "";
+  const status = row?.children[2]?.textContent ?? "";
+  if (status === "Aktív") {
+    alert("Ez a tantárgy már aktív.");
+    return;
+  }
+  const ok = await confirmModal({
+    message: `Biztosan aktiválod a(z) „${name}" tantárgyat?`,
+    okLabel: "Aktiválás",
+  });
+  if (!ok) return;
+
+  // A nevet is elkuldjuk, mert a PUT feltetel nelkul felulirja azt.
+  const res = await api.put(`/api/subjects/${selected.value}`, { name, archived: false });
+  if (res && res.id) {
+    await loadKodtarElem(); // tabla frissitese
+  } else {
+    alert("Az aktiválás nem sikerült.");
+  }
+});
+
 document.getElementById("log-save")?.addEventListener("click", saveSession);
 document.getElementById("timer-start")?.addEventListener("click", startTimer);
 document.getElementById("timer-pause")?.addEventListener("click", pauseTimer);
@@ -342,5 +632,8 @@ loadMenu();
 loadSubjects();
 loadSessions();
 loadKodtarak();
+loadKodtarElem();
+loadSubjectModal();
+loadConfirmModal();
 loadStats();
 showRandomQuote();
