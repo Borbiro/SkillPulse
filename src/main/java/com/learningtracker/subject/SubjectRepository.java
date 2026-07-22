@@ -9,7 +9,8 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
     @Query(value = """
         SELECT * FROM subjects s
-        ORDER BY s.name ASC 
+        WHERE s.archived = false
+        ORDER BY s.name ASC
        """, nativeQuery = true)
     List<Subject> findAllByArchivedFalseOrderByNameAsc();
 }
