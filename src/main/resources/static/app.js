@@ -78,6 +78,32 @@ async function loadSessions() {
   }
 }
 
+async function loadKodtarak() {
+  const body = document.getElementById("kodtar-body");
+  if (!body) return; // a Kodtar tabla csak a kodtar.html oldalon van jelen
+  const kodtarak = await api.get("/api/kodtarak");
+  body.innerHTML = "";
+  for (const k of kodtarak) {
+    const tr = document.createElement("tr");
+
+    const nameTd = document.createElement("td");
+    nameTd.textContent = k.name;
+
+    const open = document.createElement("button");
+    open.textContent = "Kódtár megnyitása";
+    open.className = "btn-primary";
+    open.addEventListener("click", () => {
+      window.location.href = `/kodtar-elem.html?id=${k.id}`;
+    });
+
+    const actionsTd = document.createElement("td");
+    actionsTd.appendChild(open);
+
+    tr.append(nameTd, actionsTd);
+    body.appendChild(tr);
+  }
+}
+
 async function loadStats() {
   const streak = await api.get("/api/stats/streak");
   document.getElementById("streak").textContent = streak.current ?? "–";
@@ -224,48 +250,63 @@ async function saveTimer() {
   }
 }
 
-// --- Menu ---
-const menuToggle = document.getElementById("menu-toggle");
-const sideMenu = document.getElementById("side-menu");
-const menuOverlay = document.getElementById("menu-overlay");
-
-function openMenu() {
-  sideMenu.classList.add("open");
-  sideMenu.setAttribute("aria-hidden", "false");
-  menuToggle.setAttribute("aria-expanded", "true");
-  menuOverlay.hidden = false;
+// --- Menu (kozos menu.html fragmentbol toltve minden oldalon) ---
+async function loadMenu() {
+  const mount = document.getElementById("menu-mount");
+  if (!mount) return; // minden oldalon van, de vedjuk magunkat
+  const html = await fetch("/menu.html").then(r => r.text());
+  mount.innerHTML = html;
+  initMenu();
 }
 
-function closeMenu() {
-  sideMenu.classList.remove("open");
-  sideMenu.setAttribute("aria-hidden", "true");
-  menuToggle.setAttribute("aria-expanded", "false");
-  menuOverlay.hidden = true;
-}
+function initMenu() {
+  const menuToggle = document.getElementById("menu-toggle");
+  const sideMenu = document.getElementById("side-menu");
+  const menuOverlay = document.getElementById("menu-overlay");
+  if (!menuToggle || !sideMenu || !menuOverlay) return;
 
-menuToggle.addEventListener("click", () => {
-  if (sideMenu.classList.contains("open")) closeMenu();
-  else openMenu();
-});
-menuOverlay.addEventListener("click", closeMenu);
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeMenu();
-});
+  function openMenu() {
+    sideMenu.classList.add("open");
+    sideMenu.setAttribute("aria-hidden", "false");
+    menuToggle.setAttribute("aria-expanded", "true");
+    menuOverlay.hidden = false;
+  }
 
-// A "Napló" menupont egy kulon oldalra navigal, a tobbi meg nincs implementalva (TODO)
-document.querySelectorAll(".menu-item").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    if (btn.dataset.target === "log") {
-      window.location.href = "/naplo.html";
-      return;
-    }
-    if (btn.dataset.target === "timer") {
-      window.location.href = "/idozito.html";
-      return;
-    }
-    closeMenu();
+  function closeMenu() {
+    sideMenu.classList.remove("open");
+    sideMenu.setAttribute("aria-hidden", "true");
+    menuToggle.setAttribute("aria-expanded", "false");
+    menuOverlay.hidden = true;
+  }
+
+  menuToggle.addEventListener("click", () => {
+    if (sideMenu.classList.contains("open")) closeMenu();
+    else openMenu();
   });
-});
+  menuOverlay.addEventListener("click", closeMenu);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+
+  // A menupontok kulon oldalakra navigalnak, a Statisztika meg nincs implementalva (TODO)
+  sideMenu.querySelectorAll(".menu-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.target === "log") {
+        window.location.href = "/naplo.html";
+        return;
+      }
+      if (btn.dataset.target === "timer") {
+        window.location.href = "/idozito.html";
+        return;
+      }
+      if (btn.dataset.target === "settings") {
+        window.location.href = "/kodtar.html";
+        return;
+      }
+      closeMenu();
+    });
+  });
+}
 
 // --- Bekotesek ---
 document.getElementById("new-entry-btn")?.addEventListener("click", () => {
@@ -297,7 +338,9 @@ async function showRandomQuote() {
 }
 
 // --- Indulas ---
+loadMenu();
 loadSubjects();
 loadSessions();
+loadKodtarak();
 loadStats();
 showRandomQuote();
