@@ -2,89 +2,89 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> A projekt kódja, kommentjei és dokumentációja magyarul íródnak. Tartsd meg ezt a nyelvet minden új kódban, kommentben és felhasználói szövegben.
+> The project's code, comments and documentation are written in Hungarian. Keep this language in all new code, comments and user-facing text.
 
-## Áttekintés
+## Overview
 
-Egyszemélyes **tanulás-követő** webalkalmazás (belső neve `learning-tracker`). Tanulási
-session-öket naplózol (tárgy + időtartam egy adott napon) időzítővel vagy kézzel; a fő
-cél a napi **streak** és a statisztika. A teljes spec a `SPEC.MD`-ben, a jelenlegi állapot
-és a TODO-k a `README.md`-ben.
+A single-user **learning tracker** web application (internal name `learning-tracker`). You log
+learning sessions (subject + duration on a given day) with a timer or manually; the main
+goal is the daily **streak** and the statistics. The full spec is in `SPEC.MD`, the current state
+and the TODOs are in `README.md`.
 
-Stack: **Spring Boot 3.4 (Java 21) + Spring Data JPA + PostgreSQL**, a frontend **vanilla
-HTML/JS**, statikus fájlként azonos originről kiszolgálva (nincs CORS, nincs build lépés).
+Stack: **Spring Boot 3.4 (Java 21) + Spring Data JPA + PostgreSQL**, the frontend is **vanilla
+HTML/JS**, served as static files from the same origin (no CORS, no build step).
 
-## Gyakori parancsok
+## Common commands
 
 ```bash
-# Futtatás (dev) — előbb legyen élő Postgres, lásd lentebb
+# Run (dev) — first have a live Postgres, see below
 mvn spring-boot:run
 
-# Build (futtatható JAR a target/-ba)
+# Build (runnable JAR into target/)
 mvn clean package
 
-# Összes teszt
+# All tests
 mvn test
 
-# Egyetlen teszt osztály / metódus
+# A single test class / method
 mvn test -Dtest=LearningTrackerApplicationTests
 mvn test -Dtest=LearningTrackerApplicationTests#contextLoads
 ```
 
-Az app a <http://localhost:8080> címen fut; a séma az első indításkor jön létre
+The app runs at <http://localhost:8080>; the schema is created on first startup
 (`spring.jpa.hibernate.ddl-auto=update`).
 
-### Adatbázis
+### Database
 
-A `contextLoads` teszt is **élő Postgres kapcsolatot igényel** (nincs H2 test-profil, bár
-a SPEC ezt javasolja jövőbeli lépésként). Beállítás `application.properties`-ben vagy
-környezeti változóval:
+The `contextLoads` test **also requires a live Postgres connection** (there is no H2 test profile,
+although the SPEC suggests this as a future step). Configure it in `application.properties` or with
+an environment variable:
 
 ```bash
 export DB_USER=postgres
 export DB_PASSWORD=postgres
 ```
 
-Fontos: a JDBC URL **5435-ös porton** várja a Postgrest (nem az alap 5432-n) — lásd
-`spring.datasource.url` az `application.properties`-ben. A `learning_tracker` adatbázist
-kézzel kell létrehozni (`CREATE DATABASE learning_tracker;`).
+Important: the JDBC URL expects Postgres on **port 5435** (not the default 5432) — see
+`spring.datasource.url` in `application.properties`. The `learning_tracker` database must be
+created manually (`CREATE DATABASE learning_tracker;`).
 
-## Architektúra
+## Architecture
 
-**Package-per-feature** felépítés a `com.learningtracker` alatt. Minden feature egy csomag,
-és jellemzően ugyanazt a hármas mintát követi: `Entity` (JPA) + `Repository`
+**Package-per-feature** layout under `com.learningtracker`. Each feature is a package,
+and typically follows the same triple pattern: `Entity` (JPA) + `Repository`
 (`JpaRepository`) + `@RestController` (`/api/...`).
 
-- **`subject/`** — Tárgy-katalógus (`Subject`). Archiválható törlés helyett (`archived`).
-- **`session/`** — `StudySession` (a `Subject`-re `@ManyToOne`) + `SessionSource` enum
-  (`TIMER` / `MANUAL`). A dashboard-lista `date DESC, created_at DESC` szerint rendez.
-- **`settings/`** — Egyetlen soros `Settings` (napi óracél, `dailyGoalMinutes`).
-- **`stats/`** — Származtatott, **nem tárolt** aggregációk (`summary` / `daily` / `streak`).
-  **Jelenleg placeholder** (üres/nulla választ ad); ezek megírása a fő nyitott munka.
-- **`quote/`** — Motivációs idézetek; `QuoteSeeder` (`CommandLineRunner`) tölti fel üres
-  táblánál. A kezdőlap a `/api/quotes/random` végpontot hívja.
+- **`subject/`** — Subject catalog (`Subject`). Archivable instead of deletion (`archived`).
+- **`session/`** — `StudySession` (`@ManyToOne` to `Subject`) + `SessionSource` enum
+  (`TIMER` / `MANUAL`). The dashboard list sorts by `date DESC, created_at DESC`.
+- **`settings/`** — Single-row `Settings` (daily hour goal, `dailyGoalMinutes`).
+- **`stats/`** — Derived, **non-stored** aggregations (`summary` / `daily` / `streak`).
+  **Currently a placeholder** (returns empty/zero); writing these is the main open work.
+- **`quote/`** — Motivational quotes; `QuoteSeeder` (`CommandLineRunner`) populates it when the
+  table is empty. The home page calls the `/api/quotes/random` endpoint.
 
-### Fontos konvenciók
+### Important conventions
 
-- **Natív SQL a repository-kban.** A meglévő lekérdezések `@Query(nativeQuery = true)`-t
-  használnak (pl. `StudySessionRepository`, `QuoteRepository` `ORDER BY RANDOM()`). A
-  `stats` aggregációkat is **SQL-ben** (`GROUP BY` / `SUM(duration_minutes)`) kell megírni,
-  nem Java-ban összegezve — ez a projekt kimondott célja (SQL-gyakorlás). A táblanevek
-  snake_case-esek (`study_sessions`, `quotes`, `subjects`).
-- **Bemeneti DTO record-ok.** A controllerek `record`-ot fogadnak `@RequestBody`-ként
-  (pl. `SessionRequest`, `QuoteRequest`), nem közvetlenül az entitást. A `stats` válaszai
-  is record DTO-k. A többi végpont viszont **jelenleg az entitást adja vissza** — a
-  válasz-DTO-k bevezetése nyitott TODO.
-- **Hibakezelés** `ResponseStatusException`-nel (`HttpStatus.NOT_FOUND` / `BAD_REQUEST`).
+- **Native SQL in the repositories.** The existing queries use `@Query(nativeQuery = true)`
+  (e.g. `StudySessionRepository`, `QuoteRepository` `ORDER BY RANDOM()`). The
+  `stats` aggregations should also be written **in SQL** (`GROUP BY` / `SUM(duration_minutes)`),
+  not summed in Java — this is the project's stated goal (SQL practice). Table names are
+  snake_case (`study_sessions`, `quotes`, `subjects`).
+- **Input DTO records.** The controllers accept a `record` as `@RequestBody`
+  (e.g. `SessionRequest`, `QuoteRequest`), not the entity directly. The `stats` responses
+  are also record DTOs. The other endpoints, however, **currently return the entity** — introducing
+  response DTOs is an open TODO.
+- **Error handling** with `ResponseStatusException` (`HttpStatus.NOT_FOUND` / `BAD_REQUEST`).
 
 ### Frontend
 
-Több különálló statikus HTML oldal a `src/main/resources/static/`-ban
-(`index.html`, `naplo.html`, `idozito.html`, `uj-elem.html`), közös `app.js` + `style.css`.
-Nincs router és nincs build — a navigáció sima `window.location.href`. Az `app.js` egyetlen
-fájl mindegyik oldalt kiszolgálja: a függvények **defenzíven ellenőrzik az elemek létét**
-(pl. `if (!body) return;`), mert nem minden elem szerepel minden oldalon.
+Several separate static HTML pages in `src/main/resources/static/`
+(`index.html`, `naplo.html`, `idozito.html`, `uj-elem.html`), with a shared `app.js` + `style.css`.
+No router and no build — navigation is plain `window.location.href`. The `app.js` is a single
+file serving every page: the functions **defensively check whether elements exist**
+(e.g. `if (!body) return;`), because not every element is present on every page.
 
-Az **időzítő teljesen kliensoldali** (`app.js`-ben start/pause/stop/save állapotgép); a
-szerver csak a leállításkor POST-olt **kész** session-t látja (`source: "TIMER"`) —
-nincs szerveroldali „futó óra" állapot.
+The **timer is entirely client-side** (a start/pause/stop/save state machine in `app.js`); the
+server only sees the **finished** session POSTed on stop (`source: "TIMER"`) —
+there is no server-side "running clock" state.

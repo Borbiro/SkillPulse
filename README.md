@@ -1,64 +1,68 @@
-# Tanulás-követő
+# Learning Tracker
 
-Egyszemélyes tanulás-követő. **Spring Boot + PostgreSQL + vanilla HTML/JS**, egyetlen JAR-ban
-(a frontend statikus fájlként, azonos originről — nincs CORS).
+A single-user learning tracker. **Spring Boot + PostgreSQL + vanilla HTML/JS**, in a single JAR
+(the frontend served as static files from the same origin — no CORS).
 
-## Előfeltételek
+## Prerequisites
 
 - Java 21
 - Maven 3.9+
 - PostgreSQL
 
-## Indítás
+## Getting started
 
-1. Hozd létre az adatbázist:
+1. Create the database:
    ```sql
    CREATE DATABASE learning_tracker;
    ```
-2. Add meg a kapcsolatot (vagy szerkeszd az `application.properties`-t):
+2. Provide the connection (or edit `application.properties`):
    ```bash
    export DB_USER=postgres
    export DB_PASSWORD=postgres
    ```
-3. Futtasd:
+   > Note: the JDBC URL expects Postgres on **port 5435** (not the default 5432) — see
+   > `spring.datasource.url` in `application.properties`.
+3. Run it:
    ```bash
    mvn spring-boot:run
    ```
-4. Nyisd meg: <http://localhost:8080>
+4. Open: <http://localhost:8080>
 
-> A séma az első indításkor létrejön (`spring.jpa.hibernate.ddl-auto=update`).
-> Éles használatra érdemes Flyway/Liquibase migrációra váltani és `validate`-re állítani.
+> The schema is created on first startup (`spring.jpa.hibernate.ddl-auto=update`).
+> For production it is worth switching to Flyway/Liquibase migrations and setting it to `validate`.
 
-## Szerkezet
+## Structure
 
 ```
 src/main/java/com/learningtracker/
 ├── LearningTrackerApplication.java
-├── subject/    Subject entitás, repo, REST controller (CRUD kész)
-├── session/    StudySession + SessionSource, repo, REST controller (CRUD kész)
-├── settings/   Settings (napi óracél), repo, controller (kész)
-└── stats/      StatsController — summary/daily/streak (TODO: SQL aggregáció)
+├── subject/    Subject entity, repo, REST controller (CRUD done)
+├── session/    StudySession + SessionSource, repo, REST controller (CRUD done)
+├── settings/   Settings (daily hour goal), repo, controller (done)
+├── stats/      StatsController — summary/daily/streak (TODO: SQL aggregation)
+└── quote/      Quote + QuoteSeeder, repo, REST controller (motivational quotes, done)
 src/main/resources/
 ├── application.properties
-└── static/     index.html, app.js, style.css  (frontend-váz)
+└── static/     index.html, naplo.html, idozito.html, uj-elem.html, app.js, style.css
 ```
 
-## Mi kész és mi a TODO
+## What's done and what's TODO
 
-**Kész (bekötve, fut):**
-- Tárgy-katalógus CRUD
-- Session CRUD, dashboard-lista dátum szerint rendezve, megjegyzés mezővel
-- Beállítások (napi óracél)
-- Frontend-váz az összes képernyővel és bekötött `fetch` hívásokkal
+**Done (wired up, running):**
+- Subject catalog CRUD
+- Session CRUD, dashboard list sorted by date, with a note field
+- Settings (daily hour goal)
+- Motivational quotes: `/api/quotes/random`, seeded on an empty table (`QuoteSeeder`); shown on the home page
+- Frontend skeleton with all screens and wired-up `fetch` calls
 
-**TODO (neked):**
-- `stats/StatsController`: a `summary` / `daily` / `streak` aggregáló lekérdezései
-  (jó terep a SQL `GROUP BY` / `SUM` gyakorlásához — lásd a repo-ban a mintát)
-- Frontend renderelés: a `// TODO` jelölt helyeken (select-ek feltöltése, lista- és
-  chart-kirajzolás, mai összperc)
-- Validáció, hibakezelés, DTO-k a válaszoknál (jelenleg entitást ad vissza)
+**TODO (for you):**
+- `stats/StatsController`: the aggregating queries for `summary` / `daily` / `streak`
+  (a good playground for practicing SQL `GROUP BY` / `SUM` — see the pattern in the repo)
+- Frontend rendering: at the `// TODO` markers (populating selects, list and
+  chart rendering, today's total minutes)
+- Validation, error handling, DTOs for the responses (currently returns the entity)
 
-## Nyitott döntések (a SPEC.md-ből)
+## Open decisions (from SPEC.md)
 
-- A nap határa a streakhez (helyi éjfél / fix időzóna)
-- Tárgy törlése: kemény törlés vagy archiválás, ha vannak hozzá session-ök
+- The day boundary for the streak (local midnight / fixed timezone)
+- Deleting a subject: hard delete or archive when it has sessions attached
