@@ -1,5 +1,6 @@
 package com.learningtracker.stats;
 
+import com.learningtracker.session.StudySessionRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -13,6 +14,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/stats")
 public class StatsController {
+
+    private final StudySessionRepository sessions;
+
+    public StatsController(StudySessionRepository sessions) {
+        this.sessions = sessions;
+    }
+
+    /** A mai napon osszesen tanult perc (a headerben jelenik meg). */
+    @GetMapping("/today")
+    public TodayTotal today() {
+        LocalDate today = LocalDate.now();
+        long minutes = sessions.sumMinutesBetween(today, today);
+        return new TodayTotal(today, minutes);
+    }
 
     /** Osszperc + targyankenti bontas egy idotartomanyra. */
     @GetMapping("/summary")
@@ -41,6 +56,8 @@ public class StatsController {
     }
 
     // --- Valasz-DTO-k ---
+
+    public record TodayTotal(LocalDate date, long totalMinutes) { }
 
     public record Summary(long totalMinutes, List<SubjectMinutes> perSubject) { }
 

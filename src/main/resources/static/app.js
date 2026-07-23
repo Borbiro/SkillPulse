@@ -172,9 +172,17 @@ async function loadKodtarElem() {
 }
 
 async function loadStats() {
+  const streakEl = document.getElementById("streak");
+  const todayEl = document.getElementById("today-total");
+  if (!streakEl && !todayEl) return; // header nelkuli oldalon nincs mit frissiteni
+
   const streak = await api.get("/api/stats/streak");
-  document.getElementById("streak").textContent = streak.current ?? "–";
-  // TODO: summary + daily lekerese, chart kirajzolasa, mai osszperc
+  if (streakEl) streakEl.textContent = streak.current ?? "–";
+
+  // Mai osszperc a headerbe (a szerver a mai datum szerint osszegez).
+  const today = await api.get("/api/stats/today");
+  if (todayEl) todayEl.textContent = today.totalMinutes ?? "–";
+  // TODO: summary + daily lekerese, chart kirajzolasa
 }
 
 // --- Uzenet megjelenitese az urlapon ---

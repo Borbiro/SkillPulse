@@ -22,4 +22,12 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         ORDER BY s.date DESC, s.created_at DESC
         """, nativeQuery = true)
     List<StudySession> findByDateBetweenOrderByDateDescCreatedAtDesc(LocalDate from, LocalDate to);
+
+    /** Osszes tanult perc egy datumtartomanyra (a headerben a mai osszperchez). */
+    @Query(value = """
+        SELECT COALESCE(SUM(s.duration_minutes), 0)
+        FROM study_sessions s
+        WHERE s.date BETWEEN :from AND :to
+        """, nativeQuery = true)
+    long sumMinutesBetween(LocalDate from, LocalDate to);
 }
