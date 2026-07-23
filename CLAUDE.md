@@ -80,11 +80,18 @@ and typically follows the same triple pattern: `Entity` (JPA) + `Repository`
 ### Frontend
 
 Several separate static HTML pages in `src/main/resources/static/`
-(`index.html`, `naplo.html`, `idozito.html`, `uj-elem.html`), with a shared `app.js` + `style.css`.
-No router and no build — navigation is plain `window.location.href`. The `app.js` is a single
-file serving every page: the functions **defensively check whether elements exist**
-(e.g. `if (!body) return;`), because not every element is present on every page.
+(`index.html`, `naplo.html`, `idozito.html`, `uj-elem.html`, …), plus a shared `style.css`.
+No router and no build — navigation is plain `window.location.href`.
 
-The **timer is entirely client-side** (a start/pause/stop/save state machine in `app.js`); the
+The JS is split into **native ES modules** under `static/js/` (no bundler; the browser loads
+them directly). Each page loads a single entry point via `<script type="module"
+src="/js/pages/<page>.js">`, which imports only the feature modules it needs. Shared modules
+live in `js/`: `api.js` (fetch layer), `ui.js` (`showFormMessage`, `mountFragment`,
+`bindOverlayDismiss`, `iconButton`, `postSession`), `chrome.js` (`initChrome` = menu + header
+stats), and feature modules (`sessions.js`, `timer.js`, `kodtar-elem.js`, …). Because a module
+only runs on the page that imports it, defensive `if (!el) return;` guards are kept only where
+presence is genuinely conditional (header stats, fragment mount points).
+
+The **timer is entirely client-side** (a start/pause/stop/save state machine in `js/timer.js`); the
 server only sees the **finished** session POSTed on stop (`source: "TIMER"`) —
 there is no server-side "running clock" state.

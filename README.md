@@ -43,7 +43,8 @@ src/main/java/com/learningtracker/
 └── quote/      Quote + QuoteSeeder, repo, REST controller (motivational quotes, done)
 src/main/resources/
 ├── application.properties
-└── static/     index.html, naplo.html, idozito.html, uj-elem.html, app.js, style.css
+└── static/     *.html oldalak + *-modal.html fragmentek, style.css
+    └── js/      ES modulok: api.js, ui.js, chrome.js, menu.js, stats.js, … + pages/<oldal>.js belepesi pontok
 ```
 
 ## What's done and what's TODO
