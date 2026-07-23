@@ -1,0 +1,32 @@
+<!-- Alkalom szerkeszto modal (a naplo "Megtekintés" gombjahoz); az app.js tolti be a naplo.html #session-modal-mount helyere.
+     A kinezet a Claude Design "Tantárgy modal" alapjan keszult, a projekt CSS-ehez igazitva. -->
+<div id="session-edit-overlay" class="modal-overlay" hidden>
+    <div class="modal-card modal-card-wide session-modal" role="dialog" aria-modal="true" aria-labelledby="session-edit-title">
+        <select id="session-edit-subject" class="subject-title-input" aria-label="Tantárgy">
+            <!-- opciok az app.js-bol toltodnek (a subjects katalogusbol) -->
+        </select>
+
+        <div class="session-modal-row">
+            <div class="field">
+                <label class="field-label" for="session-edit-date">Dátum</label>
+                <input type="date" id="session-edit-date">
+            </div>
+            <div class="field">
+                <label class="field-label" for="session-edit-minutes">Perc mennyisége</label>
+                <input type="number" id="session-edit-minutes" min="0" step="5" placeholder="pl. 45">
+            </div>
+        </div>
+
+        <div class="field session-modal-note">
+            <label class="field-label" for="session-edit-note">Megjegyzés</label>
+            <textarea id="session-edit-note" rows="4" placeholder="Írj megjegyzést…"></textarea>
+        </div>
+
+        <p id="session-edit-message" class="form-message error" hidden></p>
+
+        <div class="form-actions session-modal-actions">
+            <button type="button" id="session-edit-cancel" class="btn-secondary">Mégse</button>
+            <button type="button" id="session-edit-save" class="btn-primary">Szerkesztés</button>
+        </div>
+    </div>
+</div>

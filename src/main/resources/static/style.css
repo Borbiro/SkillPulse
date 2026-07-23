@@ -315,6 +315,63 @@ th { color: var(--muted); font-weight: 600; font-size: .85rem; }
 
 .confirm-text { margin: 0 0 1.5rem; line-height: 1.5; }
 
+/* --- Alkalom szerkeszto modal (importalt "Tantárgy modal" design) --- */
+.modal-card-wide { max-width: 520px; }
+
+/* Nagy, cimszeru tantargy-valaszto a modal tetejen */
+.subject-title-input {
+  width: 100%;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--border);
+  border-radius: 4px;
+  padding: 0 0 .5rem;
+}
+
+.subject-title-input:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+/* A tantargy sosem szerkesztheto: letiltva is eles, cimszeru marad. */
+.subject-title-input:disabled {
+  color: var(--text);
+  opacity: 1;
+  -webkit-text-fill-color: var(--text);
+}
+
+.session-modal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.session-modal-row .field { margin-bottom: 0; }
+
+.session-modal-row input,
+.session-modal-note textarea {
+  width: 100%;
+  padding: .6rem .7rem;
+}
+
+.session-modal-note { margin-top: 1.5rem; }
+.session-modal .form-message { margin-top: 1.25rem; margin-bottom: 0; }
+
+.session-modal-actions {
+  margin-top: 1.5rem;
+  border-top: 2px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+@media (max-width: 480px) {
+  .session-modal-row { grid-template-columns: 1fr; }
+}
+
 /* --- Veletlen idezet a kezdolapon (nagyban) --- */
 .quote-main {
   display: flex;
